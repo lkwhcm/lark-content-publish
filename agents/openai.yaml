@@ -1,0 +1,4 @@
+interface:
+  display_name: "飞书作品登记"
+  short_description: "单条或批量登记作品，并自动通知对应数据员"
+  default_prompt: "Use $lark-content-publish to register this published work in Feishu and notify the assigned data specialist."
