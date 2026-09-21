@@ -20,18 +20,20 @@ description: 将发布员提供的单个或多个作品标题、链接、博主�
 ## 执行入口
 
 ```bash
-SKILL_DIR="${CODEX_HOME:-$HOME/.codex}/skills/lark-content-publish"
+SKILL_DIR="$HOME/.agents/skills/lark-content-publish"
 python3 "$SKILL_DIR/scripts/publish_work.py" status
 python3 "$SKILL_DIR/scripts/publish_work.py" preflight
 ```
 
-通过 GitHub 克隆安装时，脚本会在每次命令开始前从 `https://github.com/lkwhcm/lark-content-publish` 检查更新，仅接受 `main` 分支的 fast-forward 更新。本地有改动或网络不可用时不会覆盖，也不会阻止现有版本运行。ZIP 复制安装无法自动更新。
+此 Skill 采用通用 Agent Skills 的 `SKILL.md + scripts + references` 结构。标准安装位置是 `~/.agents/skills/lark-content-publish`，安装脚本会为 Codex、Claude Code、Cursor、Gemini CLI 和 OpenCode 创建兼容入口。其他能够读取 `SKILL.md` 并执行 Python/终端命令的 Agent 也可直接使用。
+
+通过私有 GitHub 仓库安装时，脚本会在每次命令开始前检查 `main` 分支，仅接受 fast-forward 更新。本地有改动或网络不可用时不会覆盖，也不会阻止现有版本运行。ZIP 复制安装无法自动更新。
 
 若当前项目直接包含此 Skill，也可把 `SKILL_DIR` 指向项目中的 `lark-content-publish` 目录。
 
 ### 首次授权
 
-全新电脑先按 [安装与初始化](references/installation.md) 配置 `lark-cli`。Skill 包不包含飞书应用密钥或任何登录凭证。
+全新电脑先按 [安装与初始化](references/installation.md) 安装通用 Agent Skill 并配置 `lark-cli`。Skill 包不包含飞书应用密钥或任何登录凭证。
 
 `status` 显示用户身份未就绪时：
 

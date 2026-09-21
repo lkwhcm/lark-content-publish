@@ -26,7 +26,7 @@ BLOGGER_TABLE = "tblBcH0gqFr8NHpC"
 TEAM_TABLE = "tblOvwr9eaOdnnhA"
 TZ = ZoneInfo("Asia/Shanghai")
 REQUIRED_SCOPES = "base:field:read base:record:read base:record:create im:message.send_as_user"
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 TRUSTED_REPOSITORY = "https://github.com/lkwhcm/lark-content-publish.git"
 
 PLATFORMS = {"抖音", "小红书", "视频号", "B站", "快手", "公众号"}

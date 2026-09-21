@@ -1,5 +1,13 @@
 # 更新记录
 
+## 0.4.0
+
+- 仓库改为 `lkwhcm` 组织私有仓库；
+- 从 Codex 专用安装改为通用 Agent Skills 安装；
+- 统一安装到 `~/.agents/skills/`，适配 Codex、Claude Code、Cursor、Gemini CLI 和 OpenCode；
+- 新增安全的多 Agent 安装器和兼容说明；
+- 所有 Agent 共用同一 Git 工作副本和自动更新链路。
+
 ## 0.3.0
 
 - 发布到 `lkwhcm/lark-content-publish`；
