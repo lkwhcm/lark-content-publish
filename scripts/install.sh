@@ -2,14 +2,15 @@
 set -euo pipefail
 
 repository="https://github.com/lkwhcm/lark-content-publish.git"
-canonical_dir="$HOME/.agents/skills/lark-content-publish"
+agent_user_home="${AGENT_SKILLS_USER_HOME:-$HOME}"
+canonical_dir="$agent_user_home/.agents/skills/lark-content-publish"
 
 if ! command -v git >/dev/null 2>&1; then
   echo "错误：未找到 git。" >&2
   exit 1
 fi
 
-mkdir -p "$HOME/.agents/skills"
+mkdir -p "$agent_user_home/.agents/skills"
 
 if [ -e "$canonical_dir" ] || [ -L "$canonical_dir" ]; then
   if [ ! -d "$canonical_dir/.git" ]; then
@@ -31,6 +32,7 @@ if [ -e "$canonical_dir" ] || [ -L "$canonical_dir" ]; then
   git -C "$canonical_dir" pull --ff-only origin main
 else
   if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+    gh auth setup-git
     gh repo clone lkwhcm/lark-content-publish "$canonical_dir"
   else
     git clone "$repository" "$canonical_dir"
@@ -55,11 +57,11 @@ link_skill() {
   ln -s "$canonical_dir" "$link_path"
 }
 
-link_skill "$HOME/.codex/skills/lark-content-publish"
-link_skill "$HOME/.claude/skills/lark-content-publish"
-link_skill "$HOME/.cursor/skills/lark-content-publish"
-link_skill "$HOME/.gemini/skills/lark-content-publish"
-link_skill "$HOME/.config/opencode/skills/lark-content-publish"
+link_skill "$agent_user_home/.codex/skills/lark-content-publish"
+link_skill "$agent_user_home/.claude/skills/lark-content-publish"
+link_skill "$agent_user_home/.cursor/skills/lark-content-publish"
+link_skill "$agent_user_home/.gemini/skills/lark-content-publish"
+link_skill "$agent_user_home/.config/opencode/skills/lark-content-publish"
 
 python3 "$canonical_dir/scripts/publish_work.py" version
 echo "安装完成。请重启或刷新 Agent 的 Skills 列表。"
