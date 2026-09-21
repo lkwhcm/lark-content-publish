@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Register published content in Feishu Base and notify its data specialist."""
+"""Register published content in Feishu Base; Base automation handles notifications."""
 
 from __future__ import annotations
 
 import argparse
 import datetime as dt
 import difflib
-import hashlib
 import json
 import os
 import re
@@ -25,8 +24,8 @@ CONTENT_TABLE = "tblnkOdFevMax0DF"
 BLOGGER_TABLE = "tblBcH0gqFr8NHpC"
 TEAM_TABLE = "tblOvwr9eaOdnnhA"
 TZ = ZoneInfo("Asia/Shanghai")
-REQUIRED_SCOPES = "base:field:read base:record:read base:record:create im:message.send_as_user"
-VERSION = "0.4.2"
+REQUIRED_SCOPES = "base:field:read base:record:read base:record:create"
+VERSION = "0.5.0"
 TRUSTED_REPOSITORY = "https://github.com/lkwhcm/lark-content-publish.git"
 
 PLATFORMS = {"抖音", "小红书", "视频号", "B站", "快手", "公众号"}
@@ -444,35 +443,6 @@ def prepare(payload: dict, context: dict, batch_urls: set[str]) -> dict:
     }, "warnings": warnings}
 
 
-def notification(prepared: dict, record_id: str) -> str:
-    record, resolved = prepared["record"], prepared["resolved"]
-    link = f"{BASE_URL}?table={CONTENT_TABLE}&record={record_id}"
-    kpis = [f"{key} {value}" for key, value in record.items() if key.endswith("KPI")]
-    lines = [
-        f"📌 新作品已登记，请跟进数据：{record['作品标题']}",
-        f"博主：{resolved['blogger']}｜平台：{resolved['platform']}｜发布日期：{record['发布日期']}",
-        f"业务板块：{resolved['business_unit']}",
-    ]
-    if kpis:
-        lines.append("客户 KPI：" + "；".join(kpis))
-    lines.append(f"记录：{link}")
-    return "\n".join(lines)
-
-
-def grouped_notification(items: list[dict], record_ids: list[str]) -> str:
-    if len(items) == 1:
-        return notification(items[0], record_ids[0])
-    lines = [f"📌 已登记 {len(items)} 个新作品，请跟进数据："]
-    for index, (prepared, record_id) in enumerate(zip(items, record_ids), 1):
-        record, resolved = prepared["record"], prepared["resolved"]
-        link = f"{BASE_URL}?table={CONTENT_TABLE}&record={record_id}"
-        lines.append(
-            f"{index}. {record['作品标题']}｜{resolved['blogger']}｜{resolved['platform']}｜"
-            f"{record['发布日期']}\n{link}"
-        )
-    return "\n".join(lines)
-
-
 def create_records(prepared_items: list[dict]) -> list[str]:
     with tempfile.TemporaryDirectory(prefix="lark-publish-submit-") as temp_dir:
         payload_path = Path(temp_dir) / "payload.json"
@@ -491,28 +461,6 @@ def create_records(prepared_items: list[dict]) -> list[str]:
     if len(record_ids) != len(prepared_items):
         raise WorkflowError(f"创建响应记录数不一致：{json.dumps(response, ensure_ascii=False)}")
     return record_ids
-
-
-def send_group_notification(items: list[dict], record_ids: list[str]) -> None:
-    staff_id = items[0]["resolved"]["data_staff_open_id"]
-    key_source = "content-publish:" + ":".join(record_ids)
-    key = hashlib.sha256(key_source.encode()).hexdigest()[:32]
-    run_json([
-        "im", "+messages-send", "--user-id", staff_id,
-        "--text", grouped_notification(items, record_ids), "--idempotency-key", key,
-        "--as", "user", "--format", "json",
-    ])
-
-
-def notification_groups(items: list[dict], record_ids: list[str], chunk_size: int = 20):
-    grouped: dict[str, list[tuple[dict, str]]] = {}
-    for item, record_id in zip(items, record_ids):
-        staff_id = item["resolved"]["data_staff_open_id"]
-        grouped.setdefault(staff_id, []).append((item, record_id))
-    for pairs in grouped.values():
-        for start in range(0, len(pairs), chunk_size):
-            chunk = pairs[start:start + chunk_size]
-            yield [pair[0] for pair in chunk], [pair[1] for pair in chunk]
 
 
 def cmd_status() -> int:
@@ -582,6 +530,7 @@ def cmd_preflight() -> int:
             "此命令只读，不检查内容采集器是否运行，也不验证自动化在 API 新建记录后是否触发。",
             "账号负责人按博主库中的文字归属展示，不要求本人加入飞书，也不写入人员字段。",
             "数据采集器属于后续数据链路；尚未运行不影响作品登记和通知数据员。",
+            "数据员通知由飞书多维表格自动化负责，Skill 不直接发送即时消息。",
         ],
     }, ensure_ascii=False, indent=2))
     return 0 if not blockers else 1
@@ -598,12 +547,12 @@ def main() -> int:
     complete = sub.add_parser("auth-complete", help="完成飞书设备授权")
     complete.add_argument("--device-code", required=True)
     for name in ("preview", "submit"):
-        command = sub.add_parser(name, help="只读预览" if name == "preview" else "写入并通知")
+        command = sub.add_parser(name, help="只读预览" if name == "preview" else "写入内容表")
         source = command.add_mutually_exclusive_group(required=True)
         source.add_argument("--json-file")
         source.add_argument("--text")
         if name == "submit":
-            command.add_argument("--no-notify", action="store_true", help="仅在用户明确要求时跳过通知")
+            command.add_argument("--no-notify", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
         if args.command == "status":
@@ -629,18 +578,10 @@ def main() -> int:
             except WorkflowError as exc:
                 raise WorkflowError(f"第 {index} 个作品：{exc}") from exc
         if args.command == "preview":
-            placeholder_ids = [f"<创建后生成-{index}>" for index in range(1, len(prepared_items) + 1)]
-            previews = [
-                {
-                    "data_staff": group[0]["resolved"]["data_staff"],
-                    "work_count": len(group),
-                    "message": grouped_notification(group, ids),
-                }
-                for group, ids in notification_groups(prepared_items, placeholder_ids)
-            ]
             print(json.dumps({
                 "ok": True, "mode": "preview", "work_count": len(prepared_items),
-                "items": prepared_items, "notification_previews": previews,
+                "items": prepared_items,
+                "notification": "delegated_to_feishu_base_automation",
             }, ensure_ascii=False, indent=2))
             return 0
         record_ids = create_records(prepared_items)
@@ -656,25 +597,12 @@ def main() -> int:
         ]
         result = {
             "ok": True, "records_created": len(records), "records": records,
-            "notifications_sent": 0, "notification_errors": [],
+            "notification": "delegated_to_feishu_base_automation",
         }
         if len(records) == 1:
             result.update(record_id=records[0]["record_id"], record_url=records[0]["record_url"])
-        if not args.no_notify:
-            for group, ids in notification_groups(prepared_items, record_ids):
-                try:
-                    send_group_notification(group, ids)
-                    result["notifications_sent"] += 1
-                except WorkflowError as exc:
-                    result["notification_errors"].append({
-                        "data_staff": group[0]["resolved"]["data_staff"],
-                        "record_ids": ids,
-                        "error": str(exc),
-                    })
-            if result["notification_errors"]:
-                result.update(ok=False, partial_success=True)
         print(json.dumps(result, ensure_ascii=False, indent=2))
-        return 0 if result["ok"] else 2
+        return 0
     except (WorkflowError, OSError, json.JSONDecodeError) as exc:
         print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False, indent=2), file=sys.stderr)
         return 1

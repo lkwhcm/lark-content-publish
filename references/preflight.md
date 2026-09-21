@@ -7,7 +7,7 @@ python3 ~/.codex/skills/lark-content-publish/scripts/publish_work.py status
 python3 ~/.codex/skills/lark-content-publish/scripts/publish_work.py preflight
 ```
 
-`status` 检查本机 CLI、共享飞书账号登录和四项最小 OAuth 权限。`preflight` 只读检查实时表结构和基础档案，不会新增、修改或删除任何飞书数据。
+`status` 检查本机 CLI、共享飞书账号登录和三项最小 OAuth 权限。`preflight` 只读检查实时表结构和基础档案，不会新增、修改或删除任何飞书数据。
 
 ## 正式上线必须满足
 
@@ -15,7 +15,7 @@ python3 ~/.codex/skills/lark-content-publish/scripts/publish_work.py preflight
 - 博主在博主库中唯一匹配、状态为合作中，并已填写主平台、业务板块、默认数据员；
 - 数据员在团队成员表中启用、角色包含数据员，并绑定真实飞书成员；
 - 共享飞书账号拥有目标 Base 的读取和新增记录权限；
-- 至少用一条真实作品做过端到端试运行，确认作品就绪自动化、采买待办和通知均触发；
+- 至少用一条真实作品做过端到端试运行，确认作品就绪自动化、采买待办和数据员通知均触发；通知结果不由 Skill 判断；
 
 账号负责人按博主库的文字归属管理，不要求负责人本人加入飞书，也不作为作品登记前置条件。数据采集任务尚未部署不影响作品登记和通知；它属于后续实际数据回填链路，启用后再单独验证。
 

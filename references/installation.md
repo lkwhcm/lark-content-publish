@@ -24,7 +24,7 @@
    ```
 
 5. 发布员用共享飞书账号打开验证链接并确认。再把“已授权”告诉 Agent，由 Agent 执行 `auth-complete`。
-6. 运行 `status`；只有返回 `ready: true` 才表示 CLI、登录和四项最小权限全部就绪。
+6. 运行 `status`；只有返回 `ready: true` 才表示 CLI、登录和三项最小权限全部就绪。
 7. 运行 `preflight`；`trial_ready: true` 和 `registration_ready: true` 表示登记流程前置条件已满足。数据采集器不在此检查范围内。
 
 如果 Agent 运行环境要求使用 `lark-cli config bind`，按该环境已有应用绑定流程操作，不要在 Skill 包里分发 App Secret。
@@ -36,7 +36,8 @@
 - `base:field:read`：读取内容表字段定义；
 - `base:record:read`：查询博主、团队成员和重复链接；
 - `base:record:create`：新增作品记录；
-- `im:message.send_as_user`：写表成功后通知数据员。
+
+数据员通知由飞书多维表格自动化任务处理，Skill 不需要即时消息权限。
 
 共享飞书账号本身还必须拥有目标 Base 的访问和新增记录权限。权限 scope 不会绕过 Base 的资源访问控制。
 
