@@ -6,12 +6,11 @@
 
 ## 安装
 
-仓库为私有仓库。发布员必须先被加入 `lkwhcm` 组织并在电脑上完成 GitHub CLI 登录：
+仓库公开可读，不需要加入 GitHub 组织或登录 GitHub。需要 Git、Python 3 和已配置的 `lark-cli`：
 
 ```bash
-gh auth login
-gh repo clone lkwhcm/lark-content-publish /tmp/lark-content-publish-installer
-bash /tmp/lark-content-publish-installer/scripts/install.sh
+git clone https://github.com/lkwhcm/lark-content-publish.git ~/.agents/skills/lark-content-publish
+bash ~/.agents/skills/lark-content-publish/scripts/install.sh
 ```
 
 安装器把唯一工作副本放到 `~/.agents/skills/lark-content-publish`，再为各 Agent 创建软链接。飞书应用初始化、共享账号授权和最小权限说明见 [安装与初始化](references/installation.md)。Skill 仓库不包含 App Secret、OAuth Token 或本机 CLI 配置。

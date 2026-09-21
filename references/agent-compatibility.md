@@ -33,6 +33,6 @@ python3 ~/.agents/skills/lark-content-publish/scripts/publish_work.py submit --j
 
 Agent 必须具备读取本地 Skill 文件和运行 Python/`lark-cli` 的能力。纯网页聊天、没有本地文件或终端权限的 Agent 无法直接执行写表流程。
 
-## 私有仓库更新
+## 自动更新
 
-自动更新通过 GitHub 私有仓库进行。发布员电脑必须保持有效的 GitHub 凭证，并拥有 `lkwhcm/lark-content-publish` 读取权限。失去权限或离线时继续使用本机现有版本，不会阻止作品登记。
+自动更新通过 GitHub 公开仓库进行，不需要 GitHub 登录。离线时继续使用本机现有版本，不会阻止作品登记。
